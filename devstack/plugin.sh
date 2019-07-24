@@ -22,11 +22,11 @@ if [ "${Q_AGENT}" = calico-felix ]; then
 		    echo Calico plugin: pre-install
 
 		    # Add Calico master PPA as a package source.
-		    sudo apt-add-repository -y ppa:project-calico/master
+		    #sudo apt-add-repository -y ppa:project-calico/master
 		    REPOS_UPDATED=False
 
 		    # Also add BIRD project PPA as a package source.
-		    LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 sudo add-apt-repository -y ppa:cz.nic-labs/bird
+		    #LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 sudo add-apt-repository -y ppa:cz.nic-labs/bird
 
 		    ;;
 
@@ -36,13 +36,13 @@ if [ "${Q_AGENT}" = calico-felix ]; then
 		    echo Calico plugin: install
 
 		    # Upgrade dnsmasq.
-		    install_package dnsmasq-base dnsmasq-utils
+		    install_package dnsmasq dnsmasq-utils
 
 		    # Install ipset.
 		    install_package ipset
 
 		    # Install BIRD.
-		    install_package bird
+		    install_package bird bird6
 
 		    # Install the Calico agent.
 		    sudo mkdir -p /etc/calico
@@ -136,7 +136,7 @@ EOF
 		    sudo mkdir /var/log/neutron || true
 		    sudo chown `whoami` /var/log/neutron
 		    run_process calico-dhcp \
-		      "/usr/local/bin/calico-dhcp-agent --config-file $NEUTRON_CONF"
+		      "/usr/bin/calico-dhcp-agent --config-file $NEUTRON_CONF"
 
 		    ;;
 
