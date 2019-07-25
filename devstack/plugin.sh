@@ -21,13 +21,25 @@ if [ "${Q_AGENT}" = calico-felix ]; then
 		    # before project source is installed.
 		    echo Calico plugin: pre-install
 
-		    # Add Calico master PPA as a package source.
-		    #sudo apt-add-repository -y ppa:project-calico/master
-		    REPOS_UPDATED=False
-
-		    # Also add BIRD project PPA as a package source.
-		    #LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 sudo add-apt-repository -y ppa:cz.nic-labs/bird
-
+			if is_ubuntu; then
+			    # Add Calico master PPA as a package source.
+			    sudo apt-add-repository -y ppa:project-calico/master
+			    REPOS_UPDATED=False
+		    	# Also add BIRD project PPA as a package source.
+			    LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 sudo add-apt-repository -y ppa:cz.nic-labs/bird
+			elif is_fedora; then
+				# Add Calico master yum repo as a package source.
+				sudo sh -c "cat > /etc/yum.repos.d/calico.repo" << EOF
+[calico]
+name=Calico Repository
+baseurl=https://binaries.projectcalico.org/rpm/master/
+enabled=1
+skip_if_unavailable=0
+gpgcheck=1
+gpgkey=https://binaries.projectcalico.org/rpm/master/key
+priority=97
+EOF
+			fi
 		    ;;
 
 		install)
@@ -35,14 +47,11 @@ if [ "${Q_AGENT}" = calico-felix ]; then
 		    # and their dependencies have been installed.
 		    echo Calico plugin: install
 
-		    # Upgrade dnsmasq.
-		    install_package dnsmasq dnsmasq-utils
-
-		    # Install ipset.
-		    install_package ipset
-
-		    # Install BIRD.
-		    install_package bird bird6
+			if is_ubuntu; then
+				install_package dnsmasq-base dnsmasq-utils ipset bird
+			elif is_fedora; then
+			    install_package dnsmasq dnsmasq-utils ipset bird bird6
+			fi
 
 		    # Install the Calico agent.
 		    sudo mkdir -p /etc/calico
@@ -56,10 +65,9 @@ EOF
 LogSeverityFile = info
 EOF
 		    fi
-		    install_package calico-felix
 
-		    # Install Calico common code, that includes BIRD templates.
-		    install_package calico-common
+		    # Install felix and common code, that includes BIRD templates.
+		    install_package calico-felix calico-common
 
 		    # Install networking-calico.
 		    pip_install "${GITDIR['networking-calico']}"
